@@ -1,6 +1,7 @@
 package pro.sky.shelterpettelegrambot.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -12,7 +13,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.shelterpettelegrambot.configuration.BotConfiguration;
+import pro.sky.shelterpettelegrambot.model.User;
+import pro.sky.shelterpettelegrambot.model.repository.UserRepository;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +27,9 @@ import static pro.sky.shelterpettelegrambot.utils.Messages.*;
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
+
+    @Autowired
+    private UserRepository userRepository;
     private final BotConfiguration configuration;
 
     public TelegramBot(BotConfiguration configuration) {
@@ -48,17 +55,28 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             switch (text) {
                 case COMMAND_START:
+
+                    if (userRepository.findById(chatId).isEmpty()) {
+                        answer = REACTION_TO_FIRST_COMMAND_START(userFirstName);
+                        reactionToCommand(chatId, answer);
+                        saveNewUserToDB(chatId, userFirstName);
+                        return;
+                    }
+
                     answer = REACTION_TO_COMMAND_START(userFirstName);
                     reactionToCommand(chatId, answer);
                     break;
+
                 case COMMAND_HELP:
                     answer = REACTION_TO_COMMAND_HELP(userFirstName);
                     reactionToCommand(chatId, answer);
                     break;
+
                 case COMMAND_SETTINGS:
                     answer = REACTION_TO_COMMAND_SETTINGS(userFirstName);
                     getKeyBoard(chatId, answer);
                     break;
+
                 default:
                     answer = DEFAULT_REACTION(userFirstName);
                     reactionToCommand(chatId, answer);
@@ -99,6 +117,16 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setReplyMarkup(keyboard);
 
         executeMessage(message);
+    }
+
+    private void saveNewUserToDB(Long chatId, String userFirstName) {
+        User user = new User();
+
+        user.setChatId(chatId);
+        user.setFirstName(userFirstName);
+        user.setRegisterAt(new Timestamp(System.currentTimeMillis()));
+
+        userRepository.save(user);
     }
 
     private void reactionToCommand(Long chatId, String text) {

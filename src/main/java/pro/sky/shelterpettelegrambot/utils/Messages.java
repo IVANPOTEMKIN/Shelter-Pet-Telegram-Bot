@@ -1,10 +1,14 @@
 package pro.sky.shelterpettelegrambot.utils;
 
 public class Messages {
-    public static String REACTION_TO_COMMAND_START(String userFirstName) {
+    public static String REACTION_TO_FIRST_COMMAND_START(String userFirstName) {
         return String.format("""
                 Добро пожаловать, %s!
                 Чем я могу Вам помочь?""", userFirstName);
+    }
+
+    public static String REACTION_TO_COMMAND_START(String userFirstName) {
+        return String.format("Чем я могу помочь, %s", userFirstName);
     }
 
     public static String REACTION_TO_COMMAND_HELP(String userFirstName) {
