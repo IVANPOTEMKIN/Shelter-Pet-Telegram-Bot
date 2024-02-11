@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.shelterpettelegrambot.configuration.BotConfiguration;
 
 import static pro.sky.shelterpettelegrambot.utils.Commands.COMMAND_START;
+import static pro.sky.shelterpettelegrambot.utils.Messages.DEFAULT_REACTION;
 import static pro.sky.shelterpettelegrambot.utils.Messages.REACTION_TO_COMMAND_START;
 
 @Slf4j
@@ -34,8 +35,17 @@ public class TelegramBot extends TelegramLongPollingBot {
                 case COMMAND_START:
                     reactionToCommandStart(chatId, userFirstName);
                     break;
+                default:
+                    defaultReaction(chatId, userFirstName);
+                    break;
             }
         }
+    }
+
+    private void defaultReaction(Long chatId, String userFirstName) {
+        String text = DEFAULT_REACTION(userFirstName);
+        SendMessage message = sendMessage(chatId, text);
+        executeMessage(message);
     }
 
     private void reactionToCommandStart(Long chatId, String userFirstName) {
