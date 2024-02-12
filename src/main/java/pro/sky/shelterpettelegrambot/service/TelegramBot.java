@@ -22,6 +22,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import static pro.sky.shelterpettelegrambot.utils.Buttons.*;
 import static pro.sky.shelterpettelegrambot.utils.Commands.*;
 import static pro.sky.shelterpettelegrambot.utils.Descriptions.*;
 import static pro.sky.shelterpettelegrambot.utils.Messages.*;
@@ -49,82 +50,146 @@ public class TelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
 
         Long chatId;
-        String userFirstName;
-        String text;
-        String answer;
 
         if (update.hasMessage() && update.getMessage().hasText()) {
 
             chatId = update.getMessage().getChatId();
-            userFirstName = update.getMessage().getChat().getFirstName();
-            text = update.getMessage().getText();
+            String userFirstName = update.getMessage().getChat().getFirstName();
+            String text = update.getMessage().getText();
 
-            switch (text) {
-                case COMMAND_START:
-
-                    if (userRepository.findById(chatId).isEmpty()) {
-                        answer = REACTION_TO_FIRST_COMMAND_START(userFirstName);
-                        registration(chatId, answer);
-                        return;
-                    }
-
-                    answer = REACTION_TO_COMMAND_START(userFirstName);
-                    reactionToCommand(chatId, answer);
-                    break;
-
-                case COMMAND_HELP:
-                    answer = REACTION_TO_COMMAND_HELP(userFirstName);
-                    reactionToCommand(chatId, answer);
-                    break;
-
-                case COMMAND_SETTINGS:
-                    answer = REACTION_TO_COMMAND_SETTINGS(userFirstName);
-                    getKeyBoard(chatId, answer);
-                    break;
-
-                case COMMAND_REGISTRATION:
-                    answer = REACTION_TO_SUCCESSFUL_REGISTRATION(userFirstName);
-                    reactionToCommand(chatId, answer);
-                    saveNewUserToDB(chatId, userFirstName);
-                    break;
-
-                default:
-                    answer = DEFAULT_REACTION(userFirstName);
-                    reactionToCommand(chatId, answer);
-                    break;
+            if (userRepository.findById(chatId).isEmpty()) {
+                getCommandsForUnregisteredUsers(chatId, text, userFirstName);
+            } else {
+                getCommandsForRegisteredUsers(chatId, text, userFirstName);
             }
+
         } else if (update.hasCallbackQuery()) {
 
             chatId = update.getCallbackQuery().getMessage().getChatId();
             String callbackData = update.getCallbackQuery().getData();
 
-            if (callbackData.equals(YES_BUTTON)) {
+            getResultForKeyBoardButtons(chatId, callbackData);
+        }
+    }
+
+    public void getCommandsForUnregisteredUsers(Long chatId, String text, String userFirstName) {
+        String answer;
+
+        switch (text) {
+
+            case COMMAND_START:
+                answer = REACTION_TO_FIRST_COMMAND_START(userFirstName);
+                buttonsForRegistration(chatId, answer);
+                break;
+
+            case COMMAND_HELP:
+                answer = REACTION_TO_COMMAND_HELP(userFirstName);
+                reactionToCommand(chatId, answer);
+                break;
+
+            case COMMAND_SETTINGS:
+                answer = REACTION_TO_COMMAND_SETTINGS(userFirstName);
+                getKeyBoardForUnregisteredUsers(chatId, answer);
+                break;
+
+            case COMMAND_REGISTRATION:
+                answer = REACTION_TO_SUCCESSFUL_REGISTRATION(userFirstName);
+                saveNewUserToDB(chatId, userFirstName);
+                buttonGetInfoAboutShelter(chatId, answer);
+                break;
+
+            default:
+                answer = DEFAULT_REACTION(userFirstName);
+                reactionToCommand(chatId, answer);
+                break;
+        }
+    }
+
+    public void getCommandsForRegisteredUsers(Long chatId, String text, String userFirstName) {
+        String answer;
+
+        switch (text) {
+
+            case COMMAND_START:
+                answer = REACTION_TO_COMMAND_START(userFirstName);
+                buttonGetInfoAboutShelter(chatId, answer);
+                break;
+
+            case COMMAND_HELP:
+                answer = REACTION_TO_COMMAND_HELP(userFirstName);
+                buttonCallVolunteer(chatId, answer);
+                break;
+
+            case COMMAND_SETTINGS:
+                answer = REACTION_TO_COMMAND_SETTINGS(userFirstName);
+                getKeyBoardForRegisteredUsers(chatId, answer);
+                break;
+
+            case COMMAND_GET_INFO_ABOUT_SHELTER:
+                answer = INFO_ABOUT_SHELTER;
+                buttonGetInfoAboutProcess(chatId, answer);
+                break;
+
+            case COMMAND_GET_INFO_ABOUT_PROCESS:
+                answer = INFO_ABOUT_PROCESS;
+                buttonGetReportAboutPet(chatId, answer);
+                break;
+
+            case COMMAND_GET_REPORT_ABOUT_PET:
+                answer = REPORT_ABOUT_PET;
+                buttonCallVolunteer(chatId, answer);
+                break;
+
+            case COMMAND_CALL_VOLUNTEER:
+                answer = CALL_VOLUNTEER;
+                reactionToCommand(chatId, answer);
+                break;
+
+            default:
+                answer = DEFAULT_REACTION(userFirstName);
+                buttonCallVolunteer(chatId, answer);
+                break;
+        }
+    }
+
+    public void getResultForKeyBoardButtons(Long chatId, String callbackData) {
+        String answer;
+
+        switch (callbackData) {
+
+            case YES_BUTTON:
                 answer = SUCCESSFUL_REGISTRATION;
                 reactionToCommand(chatId, answer);
+                break;
 
-            } else if (callbackData.equals(NO_BUTTON)) {
+            case NO_BUTTON:
                 answer = NO_SUCCESSFUL_REGISTRATION;
                 reactionToCommand(chatId, answer);
-            }
+                break;
+
+            case INFO_ABOUT_SHELTER_BUTTON:
+                answer = INFO_ABOUT_SHELTER;
+                buttonGetInfoAboutProcess(chatId, answer);
+                break;
+
+            case INFO_ABOUT_PROCESS_BUTTON:
+                answer = INFO_ABOUT_PROCESS;
+                buttonGetReportAboutPet(chatId, answer);
+                break;
+
+            case REPORT_ABOUT_PET_BUTTON:
+                answer = REPORT_ABOUT_PET;
+                buttonCallVolunteer(chatId, answer);
+                break;
+
+            case CALL_VOLUNTEER_BUTTON:
+                answer = CALL_VOLUNTEER;
+                reactionToCommand(chatId, answer);
+                break;
         }
     }
 
-    private void createMainMenu() {
-        List<BotCommand> listOfCommands = new ArrayList<>();
-
-        listOfCommands.add(new BotCommand(COMMAND_START, DESCRIPTION_COMMAND_START));
-        listOfCommands.add(new BotCommand(COMMAND_HELP, DESCRIPTION_COMMAND_HELP));
-        listOfCommands.add(new BotCommand(COMMAND_SETTINGS, DESCRIPTION_COMMAND_SETTINGS));
-        listOfCommands.add(new BotCommand(COMMAND_REGISTRATION, DESCRIPTION_COMMAND_REGISTRATION));
-
-        try {
-            this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
-        } catch (TelegramApiException e) {
-            log.error("ERROR: setting bot`s command list {}", e.getMessage());
-        }
-    }
-
-    private void getKeyBoard(Long chatId, String text) {
+    private void getKeyBoardForUnregisteredUsers(Long chatId, String text) {
         SendMessage message = sendMessage(chatId, text);
 
         ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
@@ -146,7 +211,37 @@ public class TelegramBot extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
-    private void registration(Long chatId, String text) {
+    private void getKeyBoardForRegisteredUsers(Long chatId, String text) {
+        SendMessage message = sendMessage(chatId, text);
+
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+
+        List<KeyboardRow> rows = new ArrayList<>();
+
+        KeyboardRow row = new KeyboardRow();
+
+        row.add(COMMAND_START);
+        row.add(COMMAND_HELP);
+        row.add(COMMAND_SETTINGS);
+
+        rows.add(row);
+
+        row = new KeyboardRow();
+
+        row.add(COMMAND_GET_INFO_ABOUT_SHELTER);
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS);
+        row.add(COMMAND_GET_REPORT_ABOUT_PET);
+        row.add(COMMAND_CALL_VOLUNTEER);
+
+        rows.add(row);
+
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
+        executeMessage(message);
+    }
+
+    private void buttonsForRegistration(Long chatId, String text) {
         SendMessage message = sendMessage(chatId, text);
 
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
@@ -175,6 +270,102 @@ public class TelegramBot extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
+    private void buttonGetInfoAboutShelter(Long chatId, String text) {
+        SendMessage message = sendMessage(chatId, text);
+
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row = new ArrayList<>();
+
+        var buttonGetInfoAboutShelter = new InlineKeyboardButton();
+
+        buttonGetInfoAboutShelter.setText(COMMAND_GET_INFO_ABOUT_SHELTER);
+        buttonGetInfoAboutShelter.setCallbackData(INFO_ABOUT_SHELTER_BUTTON);
+
+        row.add(buttonGetInfoAboutShelter);
+
+        rows.add(row);
+
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
+        executeMessage(message);
+    }
+
+    private void buttonGetInfoAboutProcess(Long chatId, String text) {
+        SendMessage message = sendMessage(chatId, text);
+
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row = new ArrayList<>();
+
+        var buttonGetInfoAboutProcess = new InlineKeyboardButton();
+
+        buttonGetInfoAboutProcess.setText(COMMAND_GET_INFO_ABOUT_PROCESS);
+        buttonGetInfoAboutProcess.setCallbackData(INFO_ABOUT_PROCESS_BUTTON);
+
+        row.add(buttonGetInfoAboutProcess);
+
+        rows.add(row);
+
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
+        executeMessage(message);
+    }
+
+    private void buttonGetReportAboutPet(Long chatId, String text) {
+        SendMessage message = sendMessage(chatId, text);
+
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row = new ArrayList<>();
+
+        var buttonGetReportAboutPet = new InlineKeyboardButton();
+
+        buttonGetReportAboutPet.setText(COMMAND_GET_REPORT_ABOUT_PET);
+        buttonGetReportAboutPet.setCallbackData(REPORT_ABOUT_PET_BUTTON);
+
+        row.add(buttonGetReportAboutPet);
+
+        rows.add(row);
+
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
+        executeMessage(message);
+    }
+
+    private void buttonCallVolunteer(Long chatId, String text) {
+        SendMessage message = sendMessage(chatId, text);
+
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row = new ArrayList<>();
+
+        var buttonCallVolunteer = new InlineKeyboardButton();
+
+        buttonCallVolunteer.setText(COMMAND_CALL_VOLUNTEER);
+        buttonCallVolunteer.setCallbackData(CALL_VOLUNTEER_BUTTON);
+
+        row.add(buttonCallVolunteer);
+
+        rows.add(row);
+
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
+        executeMessage(message);
+    }
+
     private void saveNewUserToDB(Long chatId, String userFirstName) {
         User user = new User();
 
@@ -183,6 +374,20 @@ public class TelegramBot extends TelegramLongPollingBot {
         user.setRegisterAt(new Timestamp(System.currentTimeMillis()));
 
         userRepository.save(user);
+    }
+
+    private void createMainMenu() {
+        List<BotCommand> listOfCommands = new ArrayList<>();
+
+        listOfCommands.add(new BotCommand(COMMAND_START, DESCRIPTION_COMMAND_START));
+        listOfCommands.add(new BotCommand(COMMAND_HELP, DESCRIPTION_COMMAND_HELP));
+        listOfCommands.add(new BotCommand(COMMAND_SETTINGS, DESCRIPTION_COMMAND_SETTINGS));
+
+        try {
+            this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
+        } catch (TelegramApiException e) {
+            log.error("ERROR: setting bot`s command list {}", e.getMessage());
+        }
     }
 
     private void reactionToCommand(Long chatId, String text) {
