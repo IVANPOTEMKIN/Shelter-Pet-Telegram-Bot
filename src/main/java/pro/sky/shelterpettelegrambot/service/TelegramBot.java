@@ -9,7 +9,9 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import pro.sky.shelterpettelegrambot.configuration.BotConfiguration;
@@ -46,20 +48,23 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        String text = update.getMessage().getText();
-        Long chatId = update.getMessage().getChatId();
-        String userFirstName = update.getMessage().getChat().getFirstName();
+        Long chatId;
+        String userFirstName;
+        String text;
         String answer;
 
         if (update.hasMessage() && update.getMessage().hasText()) {
+
+            chatId = update.getMessage().getChatId();
+            userFirstName = update.getMessage().getChat().getFirstName();
+            text = update.getMessage().getText();
 
             switch (text) {
                 case COMMAND_START:
 
                     if (userRepository.findById(chatId).isEmpty()) {
                         answer = REACTION_TO_FIRST_COMMAND_START(userFirstName);
-                        reactionToCommand(chatId, answer);
-                        saveNewUserToDB(chatId, userFirstName);
+                        registration(chatId, answer);
                         return;
                     }
 
@@ -77,10 +82,29 @@ public class TelegramBot extends TelegramLongPollingBot {
                     getKeyBoard(chatId, answer);
                     break;
 
+                case COMMAND_REGISTRATION:
+                    answer = REACTION_TO_SUCCESSFUL_REGISTRATION(userFirstName);
+                    reactionToCommand(chatId, answer);
+                    saveNewUserToDB(chatId, userFirstName);
+                    break;
+
                 default:
                     answer = DEFAULT_REACTION(userFirstName);
                     reactionToCommand(chatId, answer);
                     break;
+            }
+        } else if (update.hasCallbackQuery()) {
+
+            chatId = update.getCallbackQuery().getMessage().getChatId();
+            String callbackData = update.getCallbackQuery().getData();
+
+            if (callbackData.equals(YES_BUTTON)) {
+                answer = SUCCESSFUL_REGISTRATION;
+                reactionToCommand(chatId, answer);
+
+            } else if (callbackData.equals(NO_BUTTON)) {
+                answer = NO_SUCCESSFUL_REGISTRATION;
+                reactionToCommand(chatId, answer);
             }
         }
     }
@@ -91,6 +115,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         listOfCommands.add(new BotCommand(COMMAND_START, DESCRIPTION_COMMAND_START));
         listOfCommands.add(new BotCommand(COMMAND_HELP, DESCRIPTION_COMMAND_HELP));
         listOfCommands.add(new BotCommand(COMMAND_SETTINGS, DESCRIPTION_COMMAND_SETTINGS));
+        listOfCommands.add(new BotCommand(COMMAND_REGISTRATION, DESCRIPTION_COMMAND_REGISTRATION));
 
         try {
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(), null));
@@ -111,11 +136,42 @@ public class TelegramBot extends TelegramLongPollingBot {
         row.add(COMMAND_START);
         row.add(COMMAND_HELP);
         row.add(COMMAND_SETTINGS);
+        row.add(COMMAND_REGISTRATION);
 
         rows.add(row);
-        keyboard.setKeyboard(rows);
-        message.setReplyMarkup(keyboard);
 
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
+        executeMessage(message);
+    }
+
+    private void registration(Long chatId, String text) {
+        SendMessage message = sendMessage(chatId, text);
+
+        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        List<InlineKeyboardButton> row = new ArrayList<>();
+
+        var buttonYes = new InlineKeyboardButton();
+        var buttonNo = new InlineKeyboardButton();
+
+        buttonYes.setText("Да");
+        buttonYes.setCallbackData(YES_BUTTON);
+
+        buttonNo.setText("Нет");
+        buttonNo.setCallbackData(NO_BUTTON);
+
+        row.add(buttonYes);
+        row.add(buttonNo);
+
+        rows.add(row);
+
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
         executeMessage(message);
     }
 
