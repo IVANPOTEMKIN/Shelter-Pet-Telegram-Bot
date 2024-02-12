@@ -186,6 +186,11 @@ public class TelegramBot extends TelegramLongPollingBot {
                 answer = CALL_VOLUNTEER;
                 reactionToCommand(chatId, answer);
                 break;
+
+            case DETAILED_INFORMATION_BUTTON:
+                answer = DETAILED_INFORMATION;
+                getKeyBoardGetInfoAboutShelter(chatId, answer);
+                break;
         }
     }
 
@@ -197,12 +202,19 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<KeyboardRow> rows = new ArrayList<>();
 
         KeyboardRow row = new KeyboardRow();
-
         row.add(COMMAND_START);
-        row.add(COMMAND_HELP);
-        row.add(COMMAND_SETTINGS);
-        row.add(COMMAND_REGISTRATION);
+        rows.add(row);
 
+        row = new KeyboardRow();
+        row.add(COMMAND_HELP);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_SETTINGS);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_REGISTRATION);
         rows.add(row);
 
         keyboard.setKeyboard(rows);
@@ -219,20 +231,52 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<KeyboardRow> rows = new ArrayList<>();
 
         KeyboardRow row = new KeyboardRow();
-
-        row.add(COMMAND_START);
-        row.add(COMMAND_HELP);
-        row.add(COMMAND_SETTINGS);
-
+        row.add(COMMAND_GET_INFO_ABOUT_SHELTER);
         rows.add(row);
 
         row = new KeyboardRow();
-
-        row.add(COMMAND_GET_INFO_ABOUT_SHELTER);
         row.add(COMMAND_GET_INFO_ABOUT_PROCESS);
-        row.add(COMMAND_GET_REPORT_ABOUT_PET);
-        row.add(COMMAND_CALL_VOLUNTEER);
+        rows.add(row);
 
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_REPORT_ABOUT_PET);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_CALL_VOLUNTEER);
+        rows.add(row);
+
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
+        executeMessage(message);
+    }
+
+    private void getKeyBoardGetInfoAboutShelter(Long chatId, String text) {
+        SendMessage message = sendMessage(chatId, text);
+
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+
+        List<KeyboardRow> rows = new ArrayList<>();
+
+        KeyboardRow row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_SHELTER_WORK_SCHEDULE_AND_ADDRESS);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_SECURITY_CONTACT_DETAILS);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_GENERAL_SAFETY_RECOMMENDATION);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_RECORD_CONTACT_DETAILS);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_CALL_VOLUNTEER);
         rows.add(row);
 
         keyboard.setKeyboard(rows);
@@ -304,10 +348,15 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> row = new ArrayList<>();
 
         var buttonGetInfoAboutProcess = new InlineKeyboardButton();
+        var buttonGetDetailedInfo = new InlineKeyboardButton();
 
         buttonGetInfoAboutProcess.setText(COMMAND_GET_INFO_ABOUT_PROCESS);
         buttonGetInfoAboutProcess.setCallbackData(INFO_ABOUT_PROCESS_BUTTON);
 
+        buttonGetDetailedInfo.setText(COMMAND_DETAILED_INFORMATION);
+        buttonGetDetailedInfo.setCallbackData(DETAILED_INFORMATION_BUTTON);
+
+        row.add(buttonGetDetailedInfo);
         row.add(buttonGetInfoAboutProcess);
 
         rows.add(row);

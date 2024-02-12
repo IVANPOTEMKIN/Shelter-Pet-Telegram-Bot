@@ -9,6 +9,7 @@ public class Messages {
     public static final String INFO_ABOUT_PROCESS = "Как бы получена информация о процессе получения животного.";
     public static final String REPORT_ABOUT_PET = "Как бы получен отчет о домашнем животном.";
     public static final String CALL_VOLUNTEER = "Как бы вызван волонтер.";
+    public static final String DETAILED_INFORMATION = "Выберите команду из клавиатуры ниже.";
 
     public static String REACTION_TO_FIRST_COMMAND_START(String userFirstName) {
         return String.format("""
