@@ -187,7 +187,17 @@ public class TelegramBot extends TelegramLongPollingBot {
                 reactionToCommand(chatId, answer);
                 break;
 
-            case DETAILED_INFORMATION_BUTTON:
+            case DETAILED_INFORMATION_BUTTON_1:
+                answer = DETAILED_INFORMATION;
+                getKeyBoardGetInfoAboutShelter(chatId, answer);
+                break;
+
+            case DETAILED_INFORMATION_BUTTON_2:
+                answer = DETAILED_INFORMATION;
+                getKeyBoardGetInfoAboutProcess(chatId, answer);
+                break;
+
+            case DETAILED_INFORMATION_BUTTON_3:
                 answer = DETAILED_INFORMATION;
                 getKeyBoardGetInfoAboutShelter(chatId, answer);
                 break;
@@ -285,6 +295,67 @@ public class TelegramBot extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
+    private void getKeyBoardGetInfoAboutProcess(Long chatId, String text) {
+        SendMessage message = sendMessage(chatId, text);
+
+        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+
+        List<KeyboardRow> rows = new ArrayList<>();
+
+        KeyboardRow row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_LIST_OF_PET);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_RULES_OF_DATING);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_LIST_OF_DOCS);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_TRANSPORTATION_RECOMMENDATIONS);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_YOUNG_PET_HOUSE_RECOMMENDATION);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_OLD_PET_HOUSE_RECOMMENDATION);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_INVALIDE_PET_HOUSE_RECOMMENDATION);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_TIPS);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_RECOMMENDATION_OF_DOG_HANDLER);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_GET_INFO_ABOUT_PROCESS_REASONS_FOR_REFUSAL);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_RECORD_CONTACT_DETAILS);
+        rows.add(row);
+
+        row = new KeyboardRow();
+        row.add(COMMAND_CALL_VOLUNTEER);
+        rows.add(row);
+        
+        keyboard.setKeyboard(rows);
+
+        message.setReplyMarkup(keyboard);
+        executeMessage(message);
+    }
+
     private void buttonsForRegistration(Long chatId, String text) {
         SendMessage message = sendMessage(chatId, text);
 
@@ -354,10 +425,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         buttonGetInfoAboutProcess.setCallbackData(INFO_ABOUT_PROCESS_BUTTON);
 
         buttonGetDetailedInfo.setText(COMMAND_DETAILED_INFORMATION);
-        buttonGetDetailedInfo.setCallbackData(DETAILED_INFORMATION_BUTTON);
+        buttonGetDetailedInfo.setCallbackData(DETAILED_INFORMATION_BUTTON_1);
 
-        row.add(buttonGetDetailedInfo);
         row.add(buttonGetInfoAboutProcess);
+        row.add(buttonGetDetailedInfo);
 
         rows.add(row);
 
@@ -377,11 +448,16 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> row = new ArrayList<>();
 
         var buttonGetReportAboutPet = new InlineKeyboardButton();
+        var buttonGetDetailedInfo = new InlineKeyboardButton();
 
         buttonGetReportAboutPet.setText(COMMAND_GET_REPORT_ABOUT_PET);
         buttonGetReportAboutPet.setCallbackData(REPORT_ABOUT_PET_BUTTON);
 
+        buttonGetDetailedInfo.setText(COMMAND_DETAILED_INFORMATION);
+        buttonGetDetailedInfo.setCallbackData(DETAILED_INFORMATION_BUTTON_2);
+
         row.add(buttonGetReportAboutPet);
+        row.add(buttonGetDetailedInfo);
 
         rows.add(row);
 
@@ -401,11 +477,16 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<InlineKeyboardButton> row = new ArrayList<>();
 
         var buttonCallVolunteer = new InlineKeyboardButton();
+        var buttonGetDetailedInfo = new InlineKeyboardButton();
 
         buttonCallVolunteer.setText(COMMAND_CALL_VOLUNTEER);
         buttonCallVolunteer.setCallbackData(CALL_VOLUNTEER_BUTTON);
 
+        buttonGetDetailedInfo.setText(COMMAND_DETAILED_INFORMATION);
+        buttonGetDetailedInfo.setCallbackData(DETAILED_INFORMATION_BUTTON_3);
+
         row.add(buttonCallVolunteer);
+        row.add(buttonGetDetailedInfo);
 
         rows.add(row);
 
